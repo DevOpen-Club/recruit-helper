@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "dbaeumer.vscode-eslint",
+    "prisma.prisma",
+    "denoland.vscode-deno"
+  ]
+}

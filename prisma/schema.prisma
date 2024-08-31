@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("FBRH_DATABASE_URL")
+}
+
+model Meta {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  status       Int
+  announcement String?
+  openSignup   Boolean
+  form         Form?   @relation(fields: [formId], references: [id])
+  formId       String? @db.ObjectId
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+}
+
+model Statistic {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  userCount        Int
+  newUserCount1d   Int
+  ticketCount      Int
+  newTicketCount1d Int
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+}
+
+model Form {
+  id                     String                 @id @default(auto()) @map("_id") @db.ObjectId
+  title                  String
+  structure              Json
+  basePermission         Int
+  permissionItems        PermissionItemOnForm[]
+  larkApprovalDefination String
+  larkApprovalWidgets    Json
+  maxTicketPerUser       Int?
+  noteAfterSubmitting    String?
+  referredMeta           Meta[]
+  referredTickets        Ticket[]
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+}
+
+model PermissionItem {
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  type          Int
+  formId        String                 @db.ObjectId
+  user          User                   @relation(fields: [userId], references: [id])
+  userId        String                 @db.ObjectId
+  referredForms PermissionItemOnForm[]
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+
+  @@index(formId)
+}
+
+model PermissionItemOnForm {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  form             Form           @relation(fields: [formId], references: [id])
+  formId           String         @db.ObjectId
+  permissionItems  PermissionItem @relation(fields: [permissionItemId], references: [id])
+  permissionItemId String         @db.ObjectId
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+
+  @@index(formId)
+}
+
+model User {
+  id                      String           @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  type                    Int
+  status                  Int
+  suspensionReason        String?
+  suspensionEndTime       DateTime?
+  session                 String           @unique
+  sessionExpireTime       DateTime
+  fanbookId               String?          @unique
+  fanbookShortId          Int?             @unique
+  createdTickets          Ticket[]
+  referredPermissionItems PermissionItem[]
+
+  signupIp      String
+  lastLoginTime DateTime?
+  lastLoginIp   String?
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+}
+
+model Ticket {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  form           Form    @relation(fields: [formId], references: [id])
+  formId         String  @db.ObjectId
+  data           Json
+  author         User    @relation(fields: [authorId], references: [id])
+  authorId       String  @db.ObjectId
+  larkApprovalId String?
+
+  createTime     DateTime @default(now())
+  lastUpdateTime DateTime @updatedAt
+
+  @@index([formId, authorId])
+}
